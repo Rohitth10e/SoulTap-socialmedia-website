@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const postModel = require('./models/post')
 const moment = require('moment')
 const path = require('path')
-const multer=require('multer')
+const multer = require('multer')
 const upload = require('./config/multerconfig')
 
 const app = express();
@@ -82,17 +82,13 @@ app.post("/login", async (req, res) => {
 app.get("/profile", isLoggedIn, async (req, res) => {
     const email = req.user.email;
     try {
-        const user = await userModel.findOne({ email }).populate({
-            path: 'posts',
-            populate: {
-                path: 'user',
-                select: 'username'
-            }
-        });
-        res.render("profile", { user });
+        const posts = await postModel.find().populate("user", 'username');
+        console.log(posts)
+        const user = await userModel.findOne({ email: email }).populate("posts");
+        res.render("profile", { user, posts })
     } catch (err) {
-        console.log(err.message);
-        res.redirect("/login");
+        console.log("err in profile: ", err.message);
+        res.redirect("/login")
     }
 });
 
@@ -105,7 +101,7 @@ app.post("/upload", isLoggedIn, upload.single('image'), async (req, res) => {
     try {
         const user = await userModel.findOne({ email: req.user.email });
         console.log(req.file)
-        user.profilePicture=req.file.filename;
+        user.profilePicture = req.file.filename;
         await user.save();
         res.redirect("/profile")
     } catch (err) {
@@ -153,8 +149,12 @@ app.get('/like/:id', isLoggedIn, async (req, res) => {
 app.get('/edit/:id', isLoggedIn, async (req, res) => {
     try {
         const post = await postModel.findOne({ _id: req.params.id })
-        console.log(post)
-        res.render("edit", { post })
+        if (req.user.userId == post.user._id) {
+            console.log(post)
+            res.render("edit", { post })
+        }else{
+            res.redirect("/profile")
+        }
         // res.redirect("/profile")
     } catch (err) {
         console.log("error", err.message);
@@ -171,6 +171,31 @@ app.post('/edit/:id', isLoggedIn, async (req, res) => {
         res.redirect("/profile")
     }
 })
+
+app.get('/delete/:id', isLoggedIn, async (req, res) => {
+    try {
+        const post = await postModel.findOne({ _id: req.params.id });
+
+        if (!post) {
+            console.log("Post not found");
+            return res.redirect("/");
+        }
+
+        console.log("Post user ID:", post.user._id);
+        console.log("Logged-in user ID:", req.user.userId);
+        if (post.user._id.equals(req.user.userId)) { 
+            await postModel.deleteOne({ _id: req.params.id });
+            return res.redirect("/profile"); 
+        } else {
+            console.log("User not authorized to delete this post");
+            return res.redirect("/profile"); 
+        }
+    } catch (err) {
+        console.log("Error in delete: ", err.message);
+        return res.redirect("/profile"); 
+    }
+});
+
 
 app.get("/logout", (req, res) => {
     res.cookie("token", "");

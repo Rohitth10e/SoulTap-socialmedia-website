@@ -1,5 +1,5 @@
-
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,25 +7,34 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body>
     <div class="w-full min-h-screen bg-zinc-900 p-10 text-white">
-        <div class="flex justify-end gap-2 mb-10">
-            <a href="/profile/upload" class="bg-blue-500 px-4 py-2 rounded-md text-sm">Update pfp</a>
-            <a href="/logout" class="bg-red-500 px-4 py-2 rounded-md text-sm">Logout</a>
+        <div class="flex justify-between items-center gap-2 mb-10">
+            <a href="/profile" class="text-2xl tracking-tight"><span class="text-yellow-500">Soul</span>Tap</a>
+            <div class="nav-btns flex gap-4 mr-10">
+                <a href="/profile/upload" class="text-blue-500 text-sm hover:text-blue-300 transition-all">Update
+                    pfp</a>
+                <a href="/logout" class="text-red-500 rounded-md text-sm hover:text-red-300 transition-all">Logout</a>
+            </div>
         </div>
         <div class="flex items-center gap-2 mb-2">
-            <div class="pfp w-10 h-10 rounded-3xl">
-                <img src="/images/uploads/<%= user.profilePicture %>" alt="profile-picture" class="w-full h-full rounded-3xl object-fit">
+            <div class="pfp w-12 h-12 ">
+                <img src="/images/uploads/<%= user.profilePicture %>" alt="profile-picture"
+                    class="w-full h-full rounded-3xl object-cover border-[2px] border-white-400">
             </div>
             <p class="text-lg text-white">Hello <%= user.name %>👋🏻</p>
         </div>
         <p class="text-md text-white mt-4">Create a post</p>
         <form action="/post" method="post">
-            <textarea name="postContent" id="" placeholder="What's on your mind" class="p-2 w-1/3 border-2 border-zinc-700 rounded-md bg-transparent outline-none resize-none block"></textarea>
-            <button type="submit" class="mt-1 px-5 py-2 text-sm bg-blue-500 rounded-md block">Create new post</button>
+            <textarea name="postContent" id="" placeholder="What's on your mind"
+                class="p-2 w-1/3 border-2 border-zinc-700 rounded-md bg-transparent outline-none resize-none block"></textarea>
+            <button type="submit"
+                class="mt-1 px-5 py-2 text-sm bg-blue-600 rounded-md block hover:bg-blue-500 transition-all">Create new
+                post</button>
         </form>
-        <div class="posts mt-20">
-            <h2 class="text-zinc-400 mb-4">Your posts</h2>
+        <div class="posts mt-20 w-full">
+            <h2 class="text-zinc-400 mb-4">Latest posts</h2>
             <!-- <div class="postcontainer border-[1px] border-zinc-700 rounded-md p-4 w-1/3 bg-zinc-800 mt-2">
                 <p class="text-blue-500 text-md mb-1">@rohith10e</p>
                 <p class="text-sm tracking-tight">Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur, enim? Lorem ipsum dolor sit amet.</p>
@@ -43,21 +52,43 @@
                 </div>
             </div> -->
 
-            <% user.posts.reverse().forEach((post)=>{ %>
-                <div class="postcontainer border-[1px] border-zinc-700 rounded-md p-4 w-1/3 bg-zinc-800 mt-2">
-                    <p class="text-blue-500 text-md mb-1">@<%= user.username %></p>
-                    <p class="text-sm tracking-tight"><%= post.content %></p>
-                        <small class="text-slate-400 text-xs block my-3"><%= post.likes.length %> likes</small>
-                    <div class="btns flex gap-2">
-                        <a href="/like/<%= post._id %>" name="like" id="like" class="text-pink-500 text-sm" onclick="handleLike()">
-                            <%= post.likes.indexOf(user._id)? 'Like' : 'Unlike' %>
-                        </a>
-                        <a href="/edit/<%= post._id %>" class="text-yellow-500 text-sm">Edit</a>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full p-4">
+                <% posts.reverse().forEach((post)=> { %>
+                    <div class="border border-zinc-700 rounded-md bg-zinc-800 w-full mt-4 relative shadow-md">
+                        <div class="p-4">
+                            <p class="text-blue-500 text-md mb-2 font-semibold h-8 overflow-hidden">@<%=
+                                    post.user.username %>
+                            </p>
+                            <p class="text-sm text-gray-300 tracking-tight h-16 overflow-hidden">
+                                <%= post.content %>
+                            </p>
+                            <small class="text-slate-400 text-xs block mb-2">
+                                <%= post.likes.length %> likes
+                            </small>
+                        </div>
+                        <div class="btns flex gap-2 h-12 items-center px-4">
+                            <a href="/like/<%= post._id %>" name="like" id="like"
+                                class="text-pink-500 text-sm hover:underline">
+                                <%= post.likes.includes(user._id) ? 'Unlike' : 'Like' %>
+                            </a>
+                            <% if (user._id.equals(post.user._id)) { %>
+                                <div class="flex items-center gap-2">
+                                    <a href="/edit/<%= post._id %>"
+                                        class="text-yellow-500 text-sm hover:underline ">Edit</a>
+                                    <a href="/delete/<%= post._id %>"
+                                        class="text-red-500 text-sm hover:underline">Delete</a>
+                                </div>
+                                <% } %>
+                        </div>
+                        <small class="mt-2 pb-2 text-xs text-zinc-500 block text-center">created at: <%= new
+                                Date(post.date).toLocaleString('en-IN', { day: 'numeric' , month: 'long' ,
+                                year: 'numeric' , hour: '2-digit' , minute: '2-digit' }) %></small>
                     </div>
-                    <small class="mt-2 text-xs text-zinc-500 inline-block">created at: <%= new Date(post.date).toLocaleString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></small>
-                </div>
-            <% }) %>
+                    <% }) %>
+            </div>
         </div>
     </div>
+    </div>
 </body>
+
 </html>
